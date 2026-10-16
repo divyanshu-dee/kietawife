@@ -682,6 +682,7 @@
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
         </a>
+        <div class="footer-help">💡 <strong>Chrome/Brave tip:</strong> Tap <em>"Send anyway"</em> below the warning button to finish login.</div>
         <div class="footer-help">Single active device allowed per student account.</div>
       </footer>
     </div>
@@ -880,7 +881,7 @@
           formA.value = now;
           formProducttype.value = '0';
 
-          setStatus("Sent. A new tab shows the portal's reply. If your browser warns the form is not secure, choose Continue.", 'info');
+          setStatus("Sent! In the new tab, tap 'Send anyway' (below Go back) to finish sign in.", 'info');
 
           try {
             portalForm.submit();
@@ -950,7 +951,7 @@
           formA.value = now;
           formProducttype.value = '0';
 
-          setStatus("Sent. A new tab shows the portal's reply. If your browser warns the form is not secure, choose Continue.", 'info');
+          setStatus("Sent! In the new tab, tap 'Send anyway' (below Go back) to finish sign out.", 'info');
 
           try {
             portalForm.submit();
