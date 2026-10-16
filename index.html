@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>KIET Wi-Fi Sign in / Sign out</title>
+  <meta name="description"
+    content="One-tap captive portal sign in and sign out for KIET College Wi-Fi (Sophos Captive Portal)" />
+  <meta name="theme-color" content="#090d16" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KIET Wi-Fi" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="alternate icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <style>
+    /* Design Tokens & CSS Variables */
+    :root {
+      --bg: #f8fafc;
+      --bg-gradient: radial-gradient(circle at 50% 0%, #e2e8f0 0%, #f8fafc 75%);
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --card-border: #e2e8f0;
+      --card-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.07), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --input-bg: #f8fafc;
+      --input-border: #cbd5e1;
+      --input-focus-border: #3b82f6;
+      --input-focus-ring: rgba(59, 130, 246, 0.2);
+
+      --btn-signin-bg: #10b981;
+      --btn-signin-hover: #059669;
+      --btn-signin-active: #047857;
+      --btn-signin-ring: rgba(16, 185, 129, 0.35);
+
+      --btn-signout-bg: #ef4444;
+      --btn-signout-hover: #dc2626;
+      --btn-signout-active: #b91c1c;
+      --btn-signout-ring: rgba(239, 68, 68, 0.35);
+
+      --status-bg: #f1f5f9;
+      --status-border: #e2e8f0;
+      --status-text: #334155;
+
+      --badge-bg: #e0f2fe;
+      --badge-text: #0369a1;
+      --badge-border: #bae6fd;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #090d16;
+        --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b 0%, #090d16 80%);
+        --card-bg: rgba(19, 27, 46, 0.88);
+        --card-border: rgba(255, 255, 255, 0.09);
+        --card-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --text-faint: #64748b;
+        --input-bg: #151d30;
+        --input-border: #334155;
+        --input-focus-border: #60a5fa;
+        --input-focus-ring: rgba(96, 165, 250, 0.25);
+
+        --status-bg: #151f33;
+        --status-border: rgba(255, 255, 255, 0.08);
+        --status-text: #cbd5e1;
+
+        --badge-bg: rgba(14, 165, 233, 0.15);
+        --badge-text: #7dd3fc;
+        --badge-border: rgba(14, 165, 233, 0.3);
+      }
+    }
+
+    /* Base Reset */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      background-image: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Centered Container */
+    .app-wrapper {
+      width: 100%;
+      max-width: 420px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Main Card */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--card-shadow);
+      padding: 28px 24px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Header Section */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .icon-badge {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(59, 130, 246, 0.12));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.2);
+    }
+
+    .icon-badge svg {
+      width: 34px;
+      height: 34px;
+      color: #10b981;
+    }
+
+    h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Mode Pill Badge */
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      border: 1px solid var(--badge-border);
+    }
+
+    .mode-indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      font-family: inherit;
+    }
+
+    input[type="password"] {
+      padding-right: 44px;
+      /* space for password toggle button */
+    }
+
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder {
+      color: var(--text-faint);
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: var(--input-focus-border);
+      box-shadow: 0 0 0 3px var(--input-focus-ring);
+    }
+
+    /* Password Toggle Button */
+    .btn-toggle-pw {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s ease;
+    }
+
+    .btn-toggle-pw:hover {
+      color: var(--text-main);
+    }
+
+    .btn-toggle-pw:focus-visible {
+      outline: 2px solid var(--input-focus-border);
+      outline-offset: 1px;
+    }
+
+    .btn-toggle-pw svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Checkbox: Remember on this device */
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 22px;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      margin-top: 2px;
+      border-radius: 5px;
+      border: 1.5px solid var(--input-border);
+      background: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .custom-checkbox svg {
+      display: none;
+      width: 12px;
+      height: 12px;
+      color: #ffffff;
+      stroke-width: 3;
+    }
+
+    .checkbox-container input[type="checkbox"]:checked+.custom-checkbox {
+      background: #10b981;
+      border-color: #10b981;
+    }
+
+    .checkbox-container input[type="checkbox"]:checked+.custom-checkbox svg {
+      display: block;
+    }
+
+    .checkbox-container input[type="checkbox"]:focus-visible+.custom-checkbox {
+      outline: 2px solid var(--input-focus-border);
+      outline-offset: 2px;
+    }
+
+    .checkbox-label {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    .checkbox-sublabel {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Button Actions */
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      color: #ffffff;
+      transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      touch-action: manipulation;
+      min-height: 48px;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .btn-signin {
+      background: var(--btn-signin-bg);
+      box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-signin:hover:not(:disabled) {
+      background: var(--btn-signin-hover);
+      box-shadow: 0 6px 16px -2px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-signin:active:not(:disabled) {
+      background: var(--btn-signin-active);
+    }
+
+    .btn-signin:focus-visible {
+      outline: 3px solid var(--btn-signin-ring);
+      outline-offset: 2px;
+    }
+
+    .btn-signout {
+      background: var(--btn-signout-bg);
+      box-shadow: 0 4px 12px -2px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-signout:hover:not(:disabled) {
+      background: var(--btn-signout-hover);
+      box-shadow: 0 6px 16px -2px rgba(239, 68, 68, 0.45);
+    }
+
+    .btn-signout:active:not(:disabled) {
+      background: var(--btn-signout-active);
+    }
+
+    .btn-signout:focus-visible {
+      outline: 3px solid var(--btn-signout-ring);
+      outline-offset: 2px;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Status Line */
+    .status-container {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+    }
+
+    .status-line {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      border-radius: var(--radius-sm);
+      background: var(--status-bg);
+      border: 1px solid var(--status-border);
+      color: var(--status-text);
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      word-break: break-word;
+      transition: all 0.2s ease;
+    }
+
+    .status-icon {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+    }
+
+    .status-line.status-info {
+      background: rgba(14, 165, 233, 0.1);
+      border-color: rgba(14, 165, 233, 0.3);
+      color: var(--text-main);
+    }
+
+    .status-line.status-info .status-icon {
+      color: #0284c7;
+    }
+
+    .status-line.status-success {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: var(--text-main);
+    }
+
+    .status-line.status-success .status-icon {
+      color: #10b981;
+    }
+
+    .status-line.status-error {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: var(--text-main);
+    }
+
+    .status-line.status-error .status-icon {
+      color: #ef4444;
+    }
+
+    /* Footer & Quick Links */
+    .card-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .card-footer a {
+      color: #10b981;
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .card-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .card-footer a:focus-visible {
+      outline: 2px solid var(--input-focus-border);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .footer-help {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    /* High contrast / screen-reader only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Keyboard focus ring defaults */
+    :focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+
+    /* Responsive adjustments for 360px */
+    @media (max-width: 380px) {
+      .card {
+        padding: 22px 16px;
+      }
+
+      .button-group {
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 12px 10px;
+        font-size: 0.9rem;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="app-wrapper">
+    <div class="card">
+      <!-- Header -->
+      <header class="header">
+        <div class="icon-badge" aria-hidden="true">
+          <!-- Wi-Fi Vector Graphic -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+            <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+            <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="2.5" />
+          </svg>
+        </div>
+        <h1>KIET Wi-Fi</h1>
+        <p class="subtitle">Sign in / Sign out</p>
+        <div id="mode-badge" class="mode-pill" title="Detected request dispatch method based on protocol">
+          <span class="mode-indicator-dot"></span>
+          <span id="mode-text">Detecting mode...</span>
+        </div>
+      </header>
+
+      <!-- Input Form -->
+      <form id="ui-form" onsubmit="return false;" novalidate>
+        <!-- Login ID Field -->
+        <div class="form-group">
+          <label for="username">Internet login ID</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" name="username" placeholder="name.rollno@kiet.edu" autocapitalize="off"
+              autocorrect="off" spellcheck="false" autocomplete="username" required />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" name="password" placeholder="Enter your password"
+              autocomplete="current-password" />
+            <button type="button" id="btn-toggle-pw" class="btn-toggle-pw" aria-label="Toggle password visibility"
+              title="Show or hide password">
+              <!-- Eye open / eye closed icon -->
+              <svg id="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg id="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember on this device checkbox -->
+        <label class="checkbox-container">
+          <input type="checkbox" id="remember-me" name="remember-me" />
+          <span class="custom-checkbox" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          <span class="checkbox-text">
+            <span class="checkbox-label">Remember on this device</span>
+            <span class="checkbox-sublabel">Saved locally in this browser</span>
+          </span>
+        </label>
+
+        <!-- Buttons side by side -->
+        <div class="button-group">
+          <button type="button" id="btn-signin" class="btn btn-signin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            <span>Sign in</span>
+          </button>
+
+          <button type="button" id="btn-signout" class="btn btn-signout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span>Sign out</span>
+          </button>
+        </div>
+
+        <!-- Status line (aria-live="polite") -->
+        <div class="status-container">
+          <div id="status" class="status-line" aria-live="polite" role="status">
+            <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" stroke-width="2.5" />
+            </svg>
+            <span id="status-text-content">Ready. Connect to KIET Wi-Fi before submitting.</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- Footer & Diagnostics -->
+      <footer class="card-footer">
+        <a href="http://172.16.16.16:8090/httpclient.html" target="_blank" rel="noopener noreferrer">
+          <span>Open Sophos Portal directly (172.16.16.16)</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </a>
+        <div class="footer-help">Single active device allowed per student account.</div>
+      </footer>
+    </div>
+  </main>
+
+  <!-- Hidden Form for HTTPS New-Tab POST (Bypasses Mixed-Content & CORS Restrictions) -->
+  <form id="portal-form" method="POST" target="_blank" style="display: none;" rel="noopener noreferrer">
+    <input type="hidden" name="mode" id="form-mode" value="191" />
+    <input type="hidden" name="username" id="form-username" value="" />
+    <input type="hidden" name="password" id="form-password" value="" />
+    <input type="hidden" name="a" id="form-a" value="" />
+    <input type="hidden" name="producttype" id="form-producttype" value="0" />
+  </form>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // DOM Elements
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const rememberCheckbox = document.getElementById('remember-me');
+      const btnSignin = document.getElementById('btn-signin');
+      const btnSignout = document.getElementById('btn-signout');
+      const btnTogglePw = document.getElementById('btn-toggle-pw');
+      const iconEyeOpen = document.getElementById('icon-eye-open');
+      const iconEyeClosed = document.getElementById('icon-eye-closed');
+      const statusBox = document.getElementById('status');
+      const statusText = document.getElementById('status-text-content');
+      const modeText = document.getElementById('mode-text');
+      const portalForm = document.getElementById('portal-form');
+      const formMode = document.getElementById('form-mode');
+      const formUsername = document.getElementById('form-username');
+      const formPassword = document.getElementById('form-password');
+      const formA = document.getElementById('form-a');
+      const formProducttype = document.getElementById('form-producttype');
+
+      // Local storage keys
+      const STORAGE_KEY_USER = 'kiet_wifi_username';
+      const STORAGE_KEY_PASS = 'kiet_wifi_password';
+      const STORAGE_KEY_REM = 'kiet_wifi_remember';
+
+      // Detect protocol mode
+      // Browsers block HTTPS -> HTTP fetch calls (mixed content), so HTTPS uses hidden form submission.
+      // file:// and http:// can perform direct background fetch (mode: 'no-cors').
+      const isLocal = location.protocol === 'file:' || location.protocol === 'http:';
+
+      if (isLocal) {
+        modeText.textContent = 'Local Mode (Direct fetch)';
+      } else {
+        modeText.textContent = 'Web Mode (New tab form)';
+      }
+
+      // Restore credentials from localStorage on page load
+      try {
+        const remembered = localStorage.getItem(STORAGE_KEY_REM) === 'true';
+        if (remembered) {
+          const savedUser = localStorage.getItem(STORAGE_KEY_USER) || '';
+          const savedPass = localStorage.getItem(STORAGE_KEY_PASS) || '';
+          usernameInput.value = savedUser;
+          passwordInput.value = savedPass;
+          rememberCheckbox.checked = true;
+        }
+      } catch (err) {
+        console.warn('localStorage access failed:', err);
+      }
+
+      // Handle "Remember on this device" checkbox change
+      rememberCheckbox.addEventListener('change', function () {
+        try {
+          if (this.checked) {
+            localStorage.setItem(STORAGE_KEY_REM, 'true');
+            localStorage.setItem(STORAGE_KEY_USER, usernameInput.value.trim());
+            localStorage.setItem(STORAGE_KEY_PASS, passwordInput.value);
+          } else {
+            localStorage.removeItem(STORAGE_KEY_REM);
+            localStorage.removeItem(STORAGE_KEY_USER);
+            localStorage.removeItem(STORAGE_KEY_PASS);
+          }
+        } catch (err) {
+          console.warn('localStorage write failed:', err);
+        }
+      });
+
+      // Synchronize changes to credentials if "Remember" is active
+      function persistCredentialsIfRemembered() {
+        if (rememberCheckbox.checked) {
+          try {
+            localStorage.setItem(STORAGE_KEY_REM, 'true');
+            localStorage.setItem(STORAGE_KEY_USER, usernameInput.value.trim());
+            localStorage.setItem(STORAGE_KEY_PASS, passwordInput.value);
+          } catch (err) {
+            console.warn('localStorage update failed:', err);
+          }
+        }
+      }
+
+      usernameInput.addEventListener('input', persistCredentialsIfRemembered);
+      passwordInput.addEventListener('input', persistCredentialsIfRemembered);
+
+      // Password visibility toggle
+      btnTogglePw.addEventListener('click', function () {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        if (isPassword) {
+          passwordInput.setAttribute('type', 'text');
+          iconEyeOpen.style.display = 'none';
+          iconEyeClosed.style.display = 'block';
+          btnTogglePw.setAttribute('aria-label', 'Hide password');
+        } else {
+          passwordInput.setAttribute('type', 'password');
+          iconEyeOpen.style.display = 'block';
+          iconEyeClosed.style.display = 'none';
+          btnTogglePw.setAttribute('aria-label', 'Show password');
+        }
+      });
+
+      // Status helper
+      function setStatus(message, type) {
+        statusText.textContent = message;
+        statusBox.className = 'status-line';
+        if (type === 'success') {
+          statusBox.classList.add('status-success');
+        } else if (type === 'error') {
+          statusBox.classList.add('status-error');
+        } else if (type === 'info') {
+          statusBox.classList.add('status-info');
+        }
+      }
+
+      // Set buttons disabled state
+      function setBusy(busy) {
+        btnSignin.disabled = busy;
+        btnSignout.disabled = busy;
+      }
+
+      // Handle Sign in action
+      btnSignin.addEventListener('click', function () {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!username) {
+          setStatus('Please enter your Internet login ID.', 'error');
+          usernameInput.focus();
+          return;
+        }
+
+        if (!password) {
+          setStatus('Please enter your Password to sign in.', 'error');
+          passwordInput.focus();
+          return;
+        }
+
+        persistCredentialsIfRemembered();
+        setBusy(true);
+
+        const now = Date.now().toString();
+
+        if (isLocal) {
+          // Local mode: use fetch with mode: 'no-cors'
+          const url = 'http://172.16.16.16:8090/login.xml';
+          const params = new URLSearchParams();
+          params.append('mode', '191');
+          params.append('username', username);
+          params.append('password', password);
+          params.append('a', now);
+          params.append('producttype', '0');
+
+          setStatus('Sending sign in request to captive portal...', 'info');
+
+          fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+          })
+            .then(() => {
+              setStatus("Request sent. Open any website to check you're online.", 'success');
+            })
+            .catch((err) => {
+              console.error('Fetch error:', err);
+              setStatus("Network error: Unable to reach portal (172.16.16.16). Ensure you are connected to KIET Wi-Fi.", 'error');
+            })
+            .finally(() => {
+              setTimeout(() => setBusy(false), 1200);
+            });
+
+        } else {
+          // HTTPS mode: submit hidden form to open portal response in a new tab
+          portalForm.action = 'http://172.16.16.16:8090/login.xml';
+          formMode.value = '191';
+          formUsername.value = username;
+          formPassword.disabled = false;
+          formPassword.value = password;
+          formA.value = now;
+          formProducttype.value = '0';
+
+          setStatus("Sent. A new tab shows the portal's reply. If your browser warns the form is not secure, choose Continue.", 'info');
+
+          try {
+            portalForm.submit();
+          } catch (e) {
+            console.error('Form submit error:', e);
+            setStatus('Failed to open portal tab. Please allow popups or check browser settings.', 'error');
+          }
+
+          // Re-enable buttons after short interval
+          setTimeout(() => setBusy(false), 2000);
+        }
+      });
+
+      // Handle Sign out action
+      btnSignout.addEventListener('click', function () {
+        const username = usernameInput.value.trim();
+
+        if (!username) {
+          setStatus('Please enter your Internet login ID to sign out.', 'error');
+          usernameInput.focus();
+          return;
+        }
+
+        persistCredentialsIfRemembered();
+        setBusy(true);
+
+        const now = Date.now().toString();
+
+        if (isLocal) {
+          // Local mode: use fetch with mode: 'no-cors'
+          const url = 'http://172.16.16.16:8090/logout.xml';
+          const params = new URLSearchParams();
+          params.append('mode', '193');
+          params.append('username', username);
+          params.append('a', now);
+          params.append('producttype', '0');
+
+          setStatus('Sending sign out request to captive portal...', 'info');
+
+          fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+          })
+            .then(() => {
+              setStatus("Request sent. Open any website to check you're online.", 'success');
+            })
+            .catch((err) => {
+              console.error('Fetch error:', err);
+              setStatus("Network error: Unable to reach portal (172.16.16.16). Ensure you are connected to KIET Wi-Fi.", 'error');
+            })
+            .finally(() => {
+              setTimeout(() => setBusy(false), 1200);
+            });
+
+        } else {
+          // HTTPS mode: submit hidden form to open portal response in a new tab
+          portalForm.action = 'http://172.16.16.16:8090/logout.xml';
+          formMode.value = '193';
+          formUsername.value = username;
+          // Password is not needed for logout
+          formPassword.disabled = true;
+          formPassword.value = '';
+          formA.value = now;
+          formProducttype.value = '0';
+
+          setStatus("Sent. A new tab shows the portal's reply. If your browser warns the form is not secure, choose Continue.", 'info');
+
+          try {
+            portalForm.submit();
+          } catch (e) {
+            console.error('Form submit error:', e);
+            setStatus('Failed to open portal tab. Please allow popups or check browser settings.', 'error');
+          }
+
+          // Re-enable buttons after short interval
+          setTimeout(() => setBusy(false), 2000);
+        }
+      });
+
+      // Register Service Worker for PWA (Only on HTTPS / localhost)
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('./sw.js')
+            .then(function (reg) {
+              console.log('KIET Wi-Fi Service Worker registered with scope:', reg.scope);
+            })
+            .catch(function (err) {
+              console.warn('Service Worker registration skipped or failed:', err);
+            });
+        });
+      }
+
+    })();
+  </script>
+</body>
+
+</html>
