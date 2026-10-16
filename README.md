@@ -20,25 +20,31 @@ Each student account allows only 1 active session at a time. This app lets you q
 
 ---
 
+## 🚀 Live Public Link
+
+- **Public Website URL**: `https://divyanshu-dee.github.io/kietawife/`
+- **GitHub Repository**: `https://github.com/divyanshu-dee/kietawife`
+
+Anyone on the KIET campus Wi-Fi can open this link on their phone, laptop, or tablet, enter their **own** ID and password, and sign in or sign out with 1 tap.
+
+---
+
 ## 🚀 How to Deploy on GitHub Pages
 
-You can host this for free on GitHub Pages and access it from any phone or laptop:
-
-1. **Create a GitHub Repository**:
-   - Go to [GitHub](https://github.com) and click **New Repository**.
-   - Name it (for example: `kiet-wifi` or `wifi`). Set it to **Public**.
-2. **Upload the Files**:
-   - Upload all files (`index.html`, `manifest.json`, `sw.js`, `icon-192.png`, `icon-512.png`, `icon.svg`, `favicon.ico`) to the root of the repository.
-   - Commit changes.
+1. **Create the GitHub Repository**:
+   - Go to [github.com/new](https://github.com/new)
+   - Repository name: **`kietawife`**
+   - Make it **Public** (do NOT check "Add a README file")
+   - Click **Create repository**
+2. **Push the Files**:
+   - Double-click `push.bat` (or run `git push -u origin main` in terminal).
 3. **Enable GitHub Pages**:
-   - In your repository, click **Settings** (top tab).
-   - In the left sidebar, click **Pages**.
-   - Under **Build and deployment** → **Source**, select **Deploy from a branch**.
-   - Under **Branch**, select `main` (or `master`) and folder `/ (root)`. Click **Save**.
+   - In your repository, go to **Settings** → **Pages**
+   - Under **Build and deployment** → **Source**, select **Deploy from a branch**
+   - Select branch `main` and folder `/ (root)`, then click **Save**
 4. **Access your site**:
-   - Within 1–2 minutes, GitHub provides your live URL:
-     `https://<your-username>.github.io/<repo-name>/`
-   - Bookmark this URL on your phone and laptop!
+   - Within 1–2 minutes, your website is live for everyone:
+     **`https://divyanshu-dee.github.io/kietawife/`**
 
 ---
 
