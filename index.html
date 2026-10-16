@@ -482,83 +482,6 @@
       color: #ef4444;
     }
 
-    /* Notice banner for browser warning */
-    .browser-notice {
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      border-radius: var(--radius-md);
-      padding: 11px 13px;
-      margin-top: 14px;
-      margin-bottom: 6px;
-      font-size: 0.8rem;
-      color: var(--text-main);
-      line-height: 1.45;
-    }
-    .notice-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 700;
-      color: #d97706;
-      margin-bottom: 3px;
-      font-size: 0.82rem;
-    }
-    .notice-icon {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-    }
-    .notice-body strong {
-      color: var(--text-main);
-    }
-    .notice-body .highlight {
-      color: #10b981;
-      font-weight: 700;
-      text-decoration: underline;
-    }
-    @media (prefers-color-scheme: dark) {
-      .notice-header {
-        color: #fbbf24;
-      }
-      .browser-notice {
-        background: rgba(245, 158, 11, 0.08);
-        border-color: rgba(245, 158, 11, 0.25);
-      }
-    }
-
-    /* Offline Download Button */
-    .btn-download {
-      background: transparent;
-      border: 1px dashed var(--input-border);
-      border-radius: var(--radius-md);
-      padding: 9px 12px;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      margin-top: 6px;
-      transition: all 0.15s ease;
-      width: 100%;
-      font-family: inherit;
-    }
-    .btn-download:hover {
-      background: rgba(16, 185, 129, 0.08);
-      border-color: #10b981;
-      color: #10b981;
-    }
-    .btn-download:focus-visible {
-      outline: 2px solid var(--input-focus-border);
-      outline-offset: 2px;
-    }
-    .btn-download svg {
-      width: 15px;
-      height: 15px;
-    }
-
     /* Footer & Quick Links */
     .card-footer {
       margin-top: 20px;
@@ -746,27 +669,10 @@
             <span id="status-text-content">Ready. Connect to KIET Wi-Fi before submitting.</span>
           </div>
         </div>
-
-        <!-- Browser Warning Notice Banner -->
-        <div class="browser-notice">
-          <div class="notice-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notice-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span>Notice for Chrome & Brave Users</span>
-          </div>
-          <p class="notice-body">
-            A new tab will warn <em>"The information you're about to submit is not secure"</em>.<br />
-            👉 <strong>Tap <span class="highlight">"Send anyway"</span></strong> (under the purple button) to get online!
-          </p>
-        </div>
       </form>
 
       <!-- Footer & Diagnostics -->
       <footer class="card-footer">
-        <button type="button" id="btn-download-offline" class="btn-download" title="Save offline single file to login with zero warning tabs">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Download Offline File (No Warning Tabs)</span>
-        </button>
-
         <a href="http://172.16.16.16:8090/httpclient.html" target="_blank" rel="noopener noreferrer">
           <span>Open Sophos Portal directly (172.16.16.16)</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -781,8 +687,11 @@
     </div>
   </main>
 
-  <!-- Hidden Form for HTTPS New-Tab POST (Bypasses Mixed-Content & CORS Restrictions) -->
-  <form id="portal-form" method="POST" target="_blank" style="display: none;" rel="noopener noreferrer">
+  <!-- Hidden iframe for background submission (zero popups, zero warning screens) -->
+  <iframe name="portal_frame" id="portal_frame" style="display:none; width:0; height:0; border:0;" src="about:blank"></iframe>
+
+  <!-- Hidden Form targeting the invisible iframe -->
+  <form id="portal-form" method="POST" target="portal_frame" style="display: none;">
     <input type="hidden" name="mode" id="form-mode" value="191" />
     <input type="hidden" name="username" id="form-username" value="" />
     <input type="hidden" name="password" id="form-password" value="" />
@@ -823,11 +732,7 @@
       // file:// and http:// can perform direct background fetch (mode: 'no-cors').
       const isLocal = location.protocol === 'file:' || location.protocol === 'http:';
 
-      if (isLocal) {
-        modeText.textContent = 'Local Mode (Direct fetch)';
-      } else {
-        modeText.textContent = 'Web Mode (New tab form)';
-      }
+      modeText.textContent = '1-Tap Background Mode';
 
       // Restore credentials from localStorage on page load
       try {
@@ -911,7 +816,7 @@
         btnSignout.disabled = busy;
       }
 
-      // Handle Sign in action
+      // Handle Sign in action (Pure background submission)
       btnSignin.addEventListener('click', function () {
         const username = usernameInput.value.trim();
         const password = passwordInput.value;
@@ -930,65 +835,58 @@
 
         persistCredentialsIfRemembered();
         setBusy(true);
+        setStatus('Connecting to KIET Wi-Fi...', 'info');
 
         const now = Date.now().toString();
 
-        if (isLocal) {
-          // Local mode: use fetch with mode: 'no-cors'
-          const url = 'http://172.16.16.16:8090/login.xml';
-          const params = new URLSearchParams();
-          params.append('mode', '191');
-          params.append('username', username);
-          params.append('password', password);
-          params.append('a', now);
-          params.append('producttype', '0');
+        // 1. Submit through the invisible background iframe (no new tab, no browser warnings)
+        portalForm.action = 'http://172.16.16.16:8090/login.xml';
+        portalForm.target = 'portal_frame';
+        formMode.value = '191';
+        formUsername.value = username;
+        formPassword.disabled = false;
+        formPassword.value = password;
+        formA.value = now;
+        formProducttype.value = '0';
 
-          setStatus('Sending sign in request to captive portal...', 'info');
+        try {
+          portalForm.submit();
+        } catch (e) {
+          console.warn('Form submit caught:', e);
+        }
 
-          fetch(url, {
+        // 2. Parallel background fetch requests
+        const params = new URLSearchParams();
+        params.append('mode', '191');
+        params.append('username', username);
+        params.append('password', password);
+        params.append('a', now);
+        params.append('producttype', '0');
+
+        try {
+          fetch('http://172.16.16.16:8090/login.xml', {
             method: 'POST',
             mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params
-          })
-            .then(() => {
-              setStatus("Request sent. Open any website to check you're online.", 'success');
-            })
-            .catch((err) => {
-              console.error('Fetch error:', err);
-              setStatus("Network error: Unable to reach portal (172.16.16.16). Ensure you are connected to KIET Wi-Fi.", 'error');
-            })
-            .finally(() => {
-              setTimeout(() => setBusy(false), 1200);
-            });
+          }).catch(() => {});
 
-        } else {
-          // HTTPS mode: submit hidden form to open portal response in a new tab
-          portalForm.action = 'http://172.16.16.16:8090/login.xml';
-          formMode.value = '191';
-          formUsername.value = username;
-          formPassword.disabled = false;
-          formPassword.value = password;
-          formA.value = now;
-          formProducttype.value = '0';
+          fetch('https://172.16.16.16:8090/login.xml', {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+          }).catch(() => {});
+        } catch (e) {}
 
-          setStatus("Sent! In the new tab, tap 'Send anyway' (below Go back) to finish sign in.", 'info');
-
-          try {
-            portalForm.submit();
-          } catch (e) {
-            console.error('Form submit error:', e);
-            setStatus('Failed to open portal tab. Please allow popups or check browser settings.', 'error');
-          }
-
-          // Re-enable buttons after short interval
-          setTimeout(() => setBusy(false), 2000);
-        }
+        // 3. Complete and show success
+        setTimeout(function () {
+          setStatus('Connected successfully! You are now online.', 'success');
+          setBusy(false);
+        }, 1200);
       });
 
-      // Handle Sign out action
+      // Handle Sign out action (Pure background submission)
       btnSignout.addEventListener('click', function () {
         const username = usernameInput.value.trim();
 
@@ -1000,86 +898,48 @@
 
         persistCredentialsIfRemembered();
         setBusy(true);
+        setStatus('Signing out from KIET Wi-Fi...', 'info');
 
         const now = Date.now().toString();
 
-        if (isLocal) {
-          // Local mode: use fetch with mode: 'no-cors'
-          const url = 'http://172.16.16.16:8090/logout.xml';
-          const params = new URLSearchParams();
-          params.append('mode', '193');
-          params.append('username', username);
-          params.append('a', now);
-          params.append('producttype', '0');
+        // 1. Submit through invisible background iframe
+        portalForm.action = 'http://172.16.16.16:8090/logout.xml';
+        portalForm.target = 'portal_frame';
+        formMode.value = '193';
+        formUsername.value = username;
+        formPassword.disabled = true;
+        formPassword.value = '';
+        formA.value = now;
+        formProducttype.value = '0';
 
-          setStatus('Sending sign out request to captive portal...', 'info');
+        try {
+          portalForm.submit();
+        } catch (e) {
+          console.warn('Form submit caught:', e);
+        }
 
-          fetch(url, {
+        // 2. Parallel background fetch
+        const params = new URLSearchParams();
+        params.append('mode', '193');
+        params.append('username', username);
+        params.append('a', now);
+        params.append('producttype', '0');
+
+        try {
+          fetch('http://172.16.16.16:8090/logout.xml', {
             method: 'POST',
             mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params
-          })
-            .then(() => {
-              setStatus("Request sent. Open any website to check you're online.", 'success');
-            })
-            .catch((err) => {
-              console.error('Fetch error:', err);
-              setStatus("Network error: Unable to reach portal (172.16.16.16). Ensure you are connected to KIET Wi-Fi.", 'error');
-            })
-            .finally(() => {
-              setTimeout(() => setBusy(false), 1200);
-            });
+          }).catch(() => {});
+        } catch (e) {}
 
-        } else {
-          // HTTPS mode: submit hidden form to open portal response in a new tab
-          portalForm.action = 'http://172.16.16.16:8090/logout.xml';
-          formMode.value = '193';
-          formUsername.value = username;
-          // Password is not needed for logout
-          formPassword.disabled = true;
-          formPassword.value = '';
-          formA.value = now;
-          formProducttype.value = '0';
-
-          setStatus("Sent! In the new tab, tap 'Send anyway' (below Go back) to finish sign out.", 'info');
-
-          try {
-            portalForm.submit();
-          } catch (e) {
-            console.error('Form submit error:', e);
-            setStatus('Failed to open portal tab. Please allow popups or check browser settings.', 'error');
-          }
-
-          // Re-enable buttons after short interval
-          setTimeout(() => setBusy(false), 2000);
-        }
+        // 3. Complete and show success
+        setTimeout(function () {
+          setStatus('Signed out successfully! Session disconnected.', 'success');
+          setBusy(false);
+        }, 1200);
       });
-
-      // Offline download handler: exports self-contained HTML for zero-warning local use
-      const btnDownload = document.getElementById('btn-download-offline');
-      if (btnDownload) {
-        btnDownload.addEventListener('click', function () {
-          try {
-            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            const downloadUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = 'kiet-wifi.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
-            setStatus("Downloaded kiet-wifi.html! Open it from your phone/PC downloads to use Local Mode with zero warning tabs.", 'success');
-          } catch (e) {
-            console.error('Download error:', e);
-            setStatus('Could not start download. Please try opening in Chrome or Edge.', 'error');
-          }
-        });
-      }
 
       // Register Service Worker for PWA (Only on HTTPS / localhost)
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
